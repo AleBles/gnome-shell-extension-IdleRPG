@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions-IdleRPG">
+    <schema path="/org/gnome/shell/extensions/IdleRPG/" id="org.gnome.shell.extensions.IdleRPG">
+        <key name="server-url" type="s">
+            <default>'xethron.lolhosting.net'</default>
+            <summary>IdleRPG web URL</summary>
+            <description/>
+        </key>
+        <key name="player-name" type="s">
+            <default>'Str1ngS'</default>
+            <summary>Your player name</summary>
+            <description/>
+        </key>
+    </schema>
+</schemalist>

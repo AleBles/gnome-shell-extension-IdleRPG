@@ -2,20 +2,24 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
 
 const _httpSession = new Soup.SessionAsync();
 Soup.Session.prototype.add_feature.call(_httpSession, new Soup.ProxyResolverDefault());
 
+
+const Lib = Extension.imports.lib;
+
 const LevelMatch = new RegExp('<level>([0-9]+)</level>');
 const ClassMatch = new RegExp('<class>(.*)</class>');
+const schema = "org.gnome.shell.extensions.IdleRPG";
 
 let text, button;
-let server = 'http://xethron.lolhosting.net/';
-let player = 'Str1ngS';
 
 let IdleRpgButton = function() {
     this._panelButton = null;
     this._panelButtonText = null;
+    this._settings = null;
     this._init();
 };
 
@@ -30,6 +34,9 @@ iRpg._init = function() {
     this._panelButtonText = new St.Label({
         text: 'Level xx class'
     });
+
+    let settings = new Lib.Settings(schema);
+    this._settings = settings.getSettings();
 
     this._panelButton.set_child(this._panelButtonText);
     this._panelButton.connect('button-press-event', this.showStatWindow.bind(this));
@@ -50,7 +57,7 @@ iRpg._updatePanelButton = function (playerData) {
     global.log(JSON.stringify(this._panelButtonText));
 };
 iRpg._loadData = function (cb) {
-    let url = server + 'xml.php?player=' + player;
+    let url = 'http://' + this._settings.get_string('server-url') + '/xml.php?player=' + this._settings.get_string('player-name');
     let message = Soup.Message.new('GET', url);
     _httpSession.queue_message(message, function(session, message) {
         cb(message.response_body.data)
