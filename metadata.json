@@ -1,0 +1,7 @@
+{
+    "shell-version": ["3.4.2"],
+    "uuid": "IdleRPG@alebles.keesinggames.nl",
+    "name": "IdleRPG",
+    "url": "https://github.com/AleBles/iRpgGE",
+    "description": "Small extension to show your IdleRPG character stats/level of your favorite IdleRPG server"
+}
