@@ -16,7 +16,8 @@ const schema = "org.gnome.shell.extensions.IdleRPG";
 let text, button;
 
 let IdleRpgButton = function() {
-    this._settings = null;
+    this._url = null;
+    this._playerName = null;
     this._init();
 };
 
@@ -29,9 +30,6 @@ iRpg._init = function() {
 
     this._nextLevel = new St.Label({ text: 'Next level in....'});
     this.menu.addActor(this._nextLevel);
-
-    let settings = new Lib.Settings(schema);
-    this._settings = settings.getSettings();
 };
 iRpg.create = function () {
     this._loadData(this._updatePanelButton.bind(this));
@@ -46,33 +44,17 @@ iRpg._updatePanelButton = function (playerData) {
     this._label.text = 'Level ' + level[1] + ' ' + playerClass[1];
 };
 iRpg._loadData = function (cb) {
-    let url = 'http://' + this._settings.get_string('server-url') + '/xml.php?player=' + this._settings.get_string('player-name');
+    let url = 'http://' + this._url + '/xml.php?player=' + this._playerName;
     let message = Soup.Message.new('GET', url);
     _httpSession.queue_message(message, function(session, message) {
         cb(message.response_body.data)
     });
 };
-iRpg.showStatWindow = function () {
-    if (!text) {
-        text = new St.Label({ style_class: 'helloworld-label', text: "Hello, world!" });
-        Main.uiGroup.add_actor(text);
-    }
-
-    text.opacity = 255;
-    let monitor = Main.layoutManager.primaryMonitor;
-
-    text.set_position(Math.floor(monitor.width / 2 - text.width / 2),
-                      Math.floor(monitor.height / 2 - text.height / 2));
-
-    Tweener.addTween(text,
-                     { opacity: 0,
-                       time: 2,
-                       transition: 'easeOutQuad',
-                       onComplete: this.hideStatWindow.bind(this) });
-};
-iRpg.hideStatWindow = function() {
-    Main.uiGroup.remove_actor(text);
-    text = null;
+iRpg.updateSettings = function () {
+    let settings = new Lib.Settings(schema);
+    this._settings = settings.getSettings();
+    this._url = this._settings.get_string('server-url');
+    this._playerName = this._settings.get_string('player-name');
 };
 
 function init() {
