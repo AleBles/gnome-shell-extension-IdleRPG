@@ -7,6 +7,7 @@ const PanelMenu = imports.ui.panelMenu;
 const _httpSession = new Soup.SessionAsync();
 const Lib = Extension.imports.lib;
 const Shell = imports.gi.Shell;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 Soup.Session.prototype.add_feature.call(_httpSession, new Soup.ProxyResolverDefault());
 
@@ -16,112 +17,121 @@ const TimeMatch = new RegExp('<ttl>([0-9]+)</ttl>');
 const IdleMatch = new RegExp('<totalidled>([0-9]+)</totalidled>');
 const schema = "org.gnome.shell.extensions.IdleRPG";
 
-let item, button;
+let item, iRpg;
+let metadata = Me.metadata;
 
-let IdleRpgButton = function() {
+function IdleRpgButton() {
     this._url = null;
     this._playerName = null;
     this._init();
 };
 
-iRpg = IdleRpgButton.prototype;
-iRpg.__proto__ = PanelMenu.Button.prototype;
-iRpg._init = function() {
-    PanelMenu.Button.prototype._init.call(this, 0.0);
-    this._label = new St.Label({text: 'Level xx class'});
-    this.actor.add_actor(this._label);
+IdleRpgButton.prototype = {
+    __proto__: PanelMenu.Button.prototype,
 
-    let section = new PopupMenu.PopupMenuSection("IdleRPG");
+    _init: function() {
+        PanelMenu.Button.prototype._init.call(this, 0.0);
+        this._label = new St.Label({text: 'Level xx class'});
+        this.actor.add_actor(this._label);
 
-    this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ....');
-    section.addMenuItem(this._nextLevel);
+        let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
-    this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ....');
-    section.addMenuItem(this._idleTime);
+        this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ....');
+        section.addMenuItem(this._nextLevel);
 
-    section.addMenuItem(this._idleTime);
-    this.menu.addMenuItem(section);
+        this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ....');
+        section.addMenuItem(this._idleTime);
 
-    this.updateSettings();
-};
-iRpg.create = function () {
-    this._loadData(this._updatePanelButton.bind(this));
-    Main.panel._rightBox.insert_child_at_index(this.actor, 0);
-};
-iRpg.destroy = function () {
-    Main.panel._rightBox.remove_child(this.actor);
-};
-iRpg._updatePanelButton = function (playerData) {
-    let level = LevelMatch.exec(playerData);
-    let playerClass = ClassMatch.exec(playerData);
-    this._label.text = 'Level ' + level[1] + ' ' + playerClass[1];
+        section.addMenuItem(this._idleTime);
+        this.menu.addMenuItem(section);
 
-    let ttl = TimeMatch.exec(playerData);
-    let idle = IdleMatch.exec(playerData);
+        this.updateSettings();
+    },
 
-    this.menu.box.get_children().forEach(function(c) {
-        c.destroy()
-    });
+    create: function() {
+        this._loadData(this._updatePanelButton.bind(this));
+    },
 
-    let section = new PopupMenu.PopupMenuSection("IdleRPG");
+    destroy: function() {
+        //nothing yet
+    },
 
-    this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ' + this._formatTime(ttl[1]));
-    section.addMenuItem(this._nextLevel);
+    _updatePanelButton: function(playerData) {
+        let level = LevelMatch.exec(playerData);
+        let playerClass = ClassMatch.exec(playerData);
+        this._label.text = 'Level ' + level[1] + ' ' + playerClass[1];
 
-    this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ' + this._formatTime(idle[1]));
-    section.addMenuItem(this._idleTime);
+        let ttl = TimeMatch.exec(playerData);
+        let idle = IdleMatch.exec(playerData);
 
-    section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.box.get_children().forEach(function(c) {
+            c.destroy()
+        });
 
-    let _appSys = Shell.AppSystem.get_default();
-    let _gsmPrefs = _appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-    item = new PopupMenu.PopupMenuItem(_("Preferences..."));
-    item.connect('activate', function () {
-        if (_gsmPrefs.get_state() == _gsmPrefs.SHELL_APP_STATE_RUNNING){
-            _gsmPrefs.activate();
-        } else {
-            _gsmPrefs.launch(global.display.get_current_time_roundtrip(),
-                [metadata.uuid],-1,null);
-        }
-    });
-    section.addMenuItem(item);
-    this.menu.addMenuItem(section);
-};
-iRpg._formatTime = function (ttl) {
-    let days = (ttl >= 86400) ? Math.floor(ttl / 86400) : 0;
-    ttl = ttl - (days * 86400);
-    let hours = Math.floor(ttl / 3600);
-    hours = (hours > 9) ? hours : '0' + hours;
-    ttl = ttl - (hours * 3600);
-    let minutes = Math.floor(ttl / 60);
-    minutes = (minutes > 9) ? minutes : '0' + minutes;
-    let seconds = ttl % 60;
-    seconds = (seconds > 9) ? seconds : '0' + seconds;
+        let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
-    return days + ' days ' + hours + ':' + minutes + ':' + seconds;
-};
-iRpg._loadData = function (cb) {
-    let url = 'http://' + this._url + '/xml.php?player=' + this._playerName;
-    let message = Soup.Message.new('GET', url);
-    _httpSession.queue_message(message, function(session, message) {
-        cb(message.response_body.data)
-    });
-};
-iRpg.updateSettings = function () {
-    let settings = new Lib.Settings(schema);
-    this._settings = settings.getSettings();
-    this._url = this._settings.get_string('server-url');
-    this._playerName = this._settings.get_string('player-name');
-};
+        this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ' + this._formatTime(ttl[1]));
+        section.addMenuItem(this._nextLevel);
+
+        this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ' + this._formatTime(idle[1]));
+        section.addMenuItem(this._idleTime);
+
+        section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        let _appSys = Shell.AppSystem.get_default();
+        let _gsmPrefs = _appSys.lookup_app('gnome-shell-extension-prefs.desktop');
+        item = new PopupMenu.PopupMenuItem(_("Preferences..."));
+        item.connect('activate', function () {
+            if (_gsmPrefs.get_state() == _gsmPrefs.SHELL_APP_STATE_RUNNING){
+                _gsmPrefs.activate();
+            } else {
+                _gsmPrefs.launch(global.display.get_current_time_roundtrip(),
+                    [metadata.uuid],-1,null);
+            }
+        });
+        section.addMenuItem(item);
+        this.menu.addMenuItem(section);
+    },
+
+    _formatTime: function(ttl) {
+        let days = (ttl >= 86400) ? Math.floor(ttl / 86400) : 0;
+        ttl = ttl - (days * 86400);
+        let hours = Math.floor(ttl / 3600);
+        hours = (hours > 9) ? hours : '0' + hours;
+        ttl = ttl - (hours * 3600);
+        let minutes = Math.floor(ttl / 60);
+        minutes = (minutes > 9) ? minutes : '0' + minutes;
+        let seconds = ttl % 60;
+        seconds = (seconds > 9) ? seconds : '0' + seconds;
+
+        return days + ' days ' + hours + ':' + minutes + ':' + seconds;
+    },
+
+    _loadData: function(cb) {
+        let url = 'http://' + this._url + '/xml.php?player=' + this._playerName;
+        let message = Soup.Message.new('GET', url);
+        _httpSession.queue_message(message, function(session, message) {
+            cb(message.response_body.data)
+        });
+    },
+
+    updateSettings: function() {
+        let settings = new Lib.Settings(schema);
+        this._settings = settings.getSettings();
+        this._url = this._settings.get_string('server-url');
+        this._playerName = this._settings.get_string('player-name');
+    }
+}
 
 function init() {
-    button = new IdleRpgButton();
+    iRpg = new IdleRpgButton();
 }
 
 function enable() {
-    button.create();
+    iRpg.create();
+    Main.panel.addToStatusArea('IdleRPG', iRpg);
 }
 
 function disable() {
-    button.destroy();
+    iRpg.destroy();
 }
