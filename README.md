@@ -12,7 +12,7 @@ After the installation, restart GNOME Shell (`Alt`+`F2`, `r`, `Enter`) and enabl
 
 ## Through extensions.gnome.org
 
-[IdleTPG](https://extensions.gnome.org/)
+[IdleRPG](https://extensions.gnome.org/)
 
 ----
 
@@ -22,7 +22,7 @@ Launch *gnome-shell-extension-prefs* and select *IdleRPG* from the drop-down men
 
 You can also use *dconf-editor* or *gsettings* to configure the extension through the command line.
 
-----
+----9
 
 # Licence
 
