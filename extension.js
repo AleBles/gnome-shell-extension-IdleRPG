@@ -17,7 +17,7 @@ const Matches = {
     playTime: new RegExp('<ttl>([0-9]+)</ttl>'),
     idle: new RegExp('<totalidled>([0-9]+)</totalidled>'),
     online: new RegExp('<online>([0-9]+)</online>'),
-    items: new RegExp('<total>([0-9]+)</total></items>'),
+    items: new RegExp('<total>([0-9]+)</total>        </items>'),
     penalties: new RegExp('<total>([0-9]+)</total></penalties>')
 }
 
@@ -67,8 +67,11 @@ IdleRpgButton.prototype = {
     _updatePanelButton: function(playerData) {
         let level = Matches.level.exec(playerData);
         let playerClass = Matches.playerClass.exec(playerData);
+//        let items = Matches.items.exec(playerData);
+//        let penalty = Matches.penalties.exec(playerData);
         let online = Matches.online.exec(playerData);
         online = (online[1] === '1') ? 'Yes' : 'No';
+
         this._label.set_text('Level ' + level[1] + ' ' + playerClass[1]);
 
         let ttl = Matches.playTime.exec(playerData);
@@ -77,8 +80,19 @@ IdleRpgButton.prototype = {
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
         });
-
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
+
+        this._level = new PopupMenu.PopupMenuItem('Level: ' + level[1]);
+        section.addMenuItem(this._level);
+
+        this._playerClass = new PopupMenu.PopupMenuItem('Class: ' + playerClass[1]);
+        section.addMenuItem(this._playerClass);
+
+//        this._items = new PopupMenu.PopupMenuItem('Item sum: ' + items[1]);
+//        section.addMenuItem(this._items);
+
+//        this._penalties = new PopupMenu.PopupMenuItem('Penalty sum: ' + this._formatTime(penalty[1]));
+//        section.addMenuItem(this._penalties);
 
         this._online = new PopupMenu.PopupMenuItem('Online: ' + online);
         section.addMenuItem(this._online);
