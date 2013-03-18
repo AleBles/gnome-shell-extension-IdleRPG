@@ -11,10 +11,17 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 Soup.Session.prototype.add_feature.call(_httpSession, new Soup.ProxyResolverDefault());
 
-const LevelMatch = new RegExp('<level>([0-9]+)</level>');
-const ClassMatch = new RegExp('<class>(.*)</class>');
-const TimeMatch = new RegExp('<ttl>([0-9]+)</ttl>');
-const IdleMatch = new RegExp('<totalidled>([0-9]+)</totalidled>');
+const Matches = {
+    level: new RegExp('<level>([0-9]+)</level>'),
+    playerClass: new RegExp('<class>(.*)</class>'),
+    playTime: new RegExp('<ttl>([0-9]+)</ttl>'),
+    idle: new RegExp('<totalidled>([0-9]+)</totalidled>'),
+    online: new RegExp('<online>([0-9]+)</online>'),
+    items: new RegExp('<total>([0-9]+)</total></items>'),
+    penalties: new RegExp('<total>([0-9]+)</total></penalties>')
+}
+
+
 const schema = "org.gnome.shell.extensions.IdleRPG";
 
 let item, iRpg;
@@ -23,6 +30,7 @@ let metadata = Me.metadata;
 function IdleRpgButton() {
     this._url = null;
     this._playerName = null;
+    this._stats = {};
     this._init();
 };
 
@@ -57,12 +65,14 @@ IdleRpgButton.prototype = {
     },
 
     _updatePanelButton: function(playerData) {
-        let level = LevelMatch.exec(playerData);
-        let playerClass = ClassMatch.exec(playerData);
-        this._label.text = 'Level ' + level[1] + ' ' + playerClass[1];
+        let level = Matches.level.exec(playerData);
+        let playerClass = Matches.playerClass.exec(playerData);
+        let online = Matches.online.exec(playerData);
+        online = (online[1] === '1') ? 'Yes' : 'No';
+        this._label.set_text('Level ' + level[1] + ' ' + playerClass[1]);
 
-        let ttl = TimeMatch.exec(playerData);
-        let idle = IdleMatch.exec(playerData);
+        let ttl = Matches.playTime.exec(playerData);
+        let idle = Matches.idle.exec(playerData);
 
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
@@ -70,26 +80,19 @@ IdleRpgButton.prototype = {
 
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
+        this._online = new PopupMenu.PopupMenuItem('Online: ' + online);
+        section.addMenuItem(this._online);
+
+        section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
         this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ' + this._formatTime(ttl[1]));
         section.addMenuItem(this._nextLevel);
 
         this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ' + this._formatTime(idle[1]));
         section.addMenuItem(this._idleTime);
 
-        section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._createPreferencesButton(section);
 
-        let _appSys = Shell.AppSystem.get_default();
-        let _gsmPrefs = _appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-        item = new PopupMenu.PopupMenuItem(_("Preferences..."));
-        item.connect('activate', function () {
-            if (_gsmPrefs.get_state() == _gsmPrefs.SHELL_APP_STATE_RUNNING){
-                _gsmPrefs.activate();
-            } else {
-                _gsmPrefs.launch(global.display.get_current_time_roundtrip(),
-                    [metadata.uuid],-1,null);
-            }
-        });
-        section.addMenuItem(item);
         this.menu.addMenuItem(section);
     },
 
@@ -115,11 +118,37 @@ IdleRpgButton.prototype = {
         });
     },
 
+    _fetchPlayerStats: function(playerStats) {
+
+    },
+
+    _createPlayerDataMenu: function(menuSection, playerData) {
+
+    },
+
+    _createPreferencesButton: function (menuSection) {
+        menuSection.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        let _appSys = Shell.AppSystem.get_default();
+        let _gsmPrefs = _appSys.lookup_app('gnome-shell-extension-prefs.desktop');
+        item = new PopupMenu.PopupMenuItem(_("Preferences..."));
+        item.connect('activate', function () {
+            if (_gsmPrefs.get_state() == _gsmPrefs.SHELL_APP_STATE_RUNNING){
+                _gsmPrefs.activate();
+            } else {
+                _gsmPrefs.launch(global.display.get_current_time_roundtrip(),
+                    [metadata.uuid],-1,null);
+            }
+        });
+        menuSection.addMenuItem(item);
+    },
+
     updateSettings: function() {
         let settings = new Lib.Settings(schema);
         this._settings = settings.getSettings();
         this._url = this._settings.get_string('server-url');
         this._playerName = this._settings.get_string('player-name');
+        this._loadData(this._updatePanelButton.bind(this));
     }
 }
 
