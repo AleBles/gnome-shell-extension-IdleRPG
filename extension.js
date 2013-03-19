@@ -17,8 +17,8 @@ const Matches = {
     playTime: new RegExp('<ttl>([0-9]+)</ttl>'),
     idle: new RegExp('<totalidled>([0-9]+)</totalidled>'),
     online: new RegExp('<online>([0-9]+)</online>'),
-    items: new RegExp('<total>([0-9]+)</total>        </items>'),
-    penalties: new RegExp('<total>([0-9]+)</total></penalties>')
+    items: new RegExp('<total>([0-9]+)</total>(\\s+)</items>'),
+    penalties: new RegExp('<total>([0-9]+)</total>(\\s+)</penalties>')
 }
 
 
@@ -28,9 +28,16 @@ let item, iRpg;
 let metadata = Me.metadata;
 
 function IdleRpgButton() {
-    this._url = null;
-    this._playerName = null;
-    this._stats = {};
+    this._settings = null;
+    this._stats = {
+        level: null,
+        playerClass: null,
+        playTime: null,
+        idle: null,
+        online: null,
+        items: null,
+        penalties: null
+    };
     this._init();
 };
 
@@ -39,6 +46,10 @@ IdleRpgButton.prototype = {
 
     _init: function() {
         PanelMenu.Button.prototype._init.call(this, 0.0);
+
+        let settings = new Lib.Settings(schema);
+        this._settings = settings.getSettings();
+
         this._label = new St.Label({text: 'Level xx class'});
         this.actor.add_actor(this._label);
 
@@ -52,8 +63,6 @@ IdleRpgButton.prototype = {
 
         section.addMenuItem(this._idleTime);
         this.menu.addMenuItem(section);
-
-        this.updateSettings();
     },
 
     create: function() {
@@ -67,8 +76,8 @@ IdleRpgButton.prototype = {
     _updatePanelButton: function(playerData) {
         let level = Matches.level.exec(playerData);
         let playerClass = Matches.playerClass.exec(playerData);
-//        let items = Matches.items.exec(playerData);
-//        let penalty = Matches.penalties.exec(playerData);
+        let items = Matches.items.exec(playerData);
+        let penalty = Matches.penalties.exec(playerData);
         let online = Matches.online.exec(playerData);
         online = (online[1] === '1') ? 'Yes' : 'No';
 
@@ -88,11 +97,11 @@ IdleRpgButton.prototype = {
         this._playerClass = new PopupMenu.PopupMenuItem('Class: ' + playerClass[1]);
         section.addMenuItem(this._playerClass);
 
-//        this._items = new PopupMenu.PopupMenuItem('Item sum: ' + items[1]);
-//        section.addMenuItem(this._items);
+        this._items = new PopupMenu.PopupMenuItem('Item sum: ' + items[1]);
+        section.addMenuItem(this._items);
 
-//        this._penalties = new PopupMenu.PopupMenuItem('Penalty sum: ' + this._formatTime(penalty[1]));
-//        section.addMenuItem(this._penalties);
+        this._penalties = new PopupMenu.PopupMenuItem('Penalty sum: ' + this._formatTime(penalty[1]));
+        section.addMenuItem(this._penalties);
 
         this._online = new PopupMenu.PopupMenuItem('Online: ' + online);
         section.addMenuItem(this._online);
@@ -105,7 +114,7 @@ IdleRpgButton.prototype = {
         this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ' + this._formatTime(idle[1]));
         section.addMenuItem(this._idleTime);
 
-        this._createPreferencesButton(section);
+        this._createPreferencesAndUpdateButton(section);
 
         this.menu.addMenuItem(section);
     },
@@ -125,7 +134,7 @@ IdleRpgButton.prototype = {
     },
 
     _loadData: function(cb) {
-        let url = 'http://' + this._url + '/xml.php?player=' + this._playerName;
+        let url = 'http://' + this._settings.get_string('server-url') + '/xml.php?player=' + this._settings.get_string('player-name');
         let message = Soup.Message.new('GET', url);
         _httpSession.queue_message(message, function(session, message) {
             cb(message.response_body.data)
@@ -140,7 +149,7 @@ IdleRpgButton.prototype = {
 
     },
 
-    _createPreferencesButton: function (menuSection) {
+    _createPreferencesAndUpdateButton: function (menuSection) {
         menuSection.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         let _appSys = Shell.AppSystem.get_default();
@@ -155,14 +164,13 @@ IdleRpgButton.prototype = {
             }
         });
         menuSection.addMenuItem(item);
-    },
 
-    updateSettings: function() {
-        let settings = new Lib.Settings(schema);
-        this._settings = settings.getSettings();
-        this._url = this._settings.get_string('server-url');
-        this._playerName = this._settings.get_string('player-name');
-        this._loadData(this._updatePanelButton.bind(this));
+        item = new PopupMenu.PopupMenuItem(_("Update now!"));
+        let self = this;
+        item.connect('activate', function () {
+            self._loadData(self._updatePanelButton.bind(self));
+        });
+        menuSection.addMenuItem(item);
     }
 }
 
