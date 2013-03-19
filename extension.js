@@ -32,11 +32,20 @@ function IdleRpgButton() {
     this._stats = {
         level: null,
         playerClass: null,
+        items: null,
+        online: null,
         playTime: null,
         idle: null,
-        online: null,
-        items: null,
         penalties: null
+    };
+    this._texts = {
+        level: _("Level: "),
+        playerClass: _("Class: "),
+        online: _("Online: "),
+        items: _("Item sum: "),
+        playTime:  _("Next level: "),
+        idle: _("Total idle time: "),
+        penalties: _("Penalty sum: ")
     };
     this._init();
 };
@@ -55,13 +64,18 @@ IdleRpgButton.prototype = {
 
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
-        this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ....');
-        section.addMenuItem(this._nextLevel);
+        for (let stat in this._stats) {
+            let menuItem;
+            if(this._texts.hasOwnProperty(stat)) {
+                menuItem = new PopupMenu.PopupMenuItem(this._texts[stat] + '...');
+            } else {
+                menuItem = new PopupMenu.PopupMenuItem(stat + ': ...');
+            }
+            section.addMenuItem(menuItem);
+        }
 
-        this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ....');
-        section.addMenuItem(this._idleTime);
+        this._createPreferencesAndUpdateButton(section);
 
-        section.addMenuItem(this._idleTime);
         this.menu.addMenuItem(section);
     },
 
@@ -74,60 +88,50 @@ IdleRpgButton.prototype = {
     },
 
     _updatePanelButton: function(playerData) {
-        let level = Matches.level.exec(playerData);
-        let playerClass = Matches.playerClass.exec(playerData);
-        let items = Matches.items.exec(playerData);
-        let penalty = Matches.penalties.exec(playerData);
-        let online = Matches.online.exec(playerData);
-        online = (online[1] === '1') ? 'Yes' : 'No';
+        for (let match in Matches) {
+            if(this._stats.hasOwnProperty(match)) {
+                let tmpMatch = Matches[match].exec(playerData);
+                this._stats[match] = tmpMatch[1] || null;
+            }
+        }
 
-        this._label.set_text('Level ' + level[1] + ' ' + playerClass[1]);
+        this._stats.online = (this._stats.online === '1') ? 'Yes' : 'No';
 
-        let ttl = Matches.playTime.exec(playerData);
-        let idle = Matches.idle.exec(playerData);
+        this._label.set_text('Level ' + this._stats.level + ' ' + this._stats.playerClass);
 
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
         });
+
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
-        this._level = new PopupMenu.PopupMenuItem('Level: ' + level[1]);
-        section.addMenuItem(this._level);
+        for (let stat in this._stats) {
+            let menuItem;
+            let tmpStat = (['penalties', 'playTime', 'idle'].indexOf(stat) !== -1) ?
+                this._formatTime(this._stats[stat]) : this._stats[stat];
 
-        this._playerClass = new PopupMenu.PopupMenuItem('Class: ' + playerClass[1]);
-        section.addMenuItem(this._playerClass);
-
-        this._items = new PopupMenu.PopupMenuItem('Item sum: ' + items[1]);
-        section.addMenuItem(this._items);
-
-        this._penalties = new PopupMenu.PopupMenuItem('Penalty sum: ' + this._formatTime(penalty[1]));
-        section.addMenuItem(this._penalties);
-
-        this._online = new PopupMenu.PopupMenuItem('Online: ' + online);
-        section.addMenuItem(this._online);
-
-        section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-        this._nextLevel = new PopupMenu.PopupMenuItem('Next level: ' + this._formatTime(ttl[1]));
-        section.addMenuItem(this._nextLevel);
-
-        this._idleTime = new PopupMenu.PopupMenuItem('Total idle time: ' + this._formatTime(idle[1]));
-        section.addMenuItem(this._idleTime);
+            if(this._texts.hasOwnProperty(stat)) {
+                menuItem = new PopupMenu.PopupMenuItem(this._texts[stat] + tmpStat);
+            } else {
+                menuItem = new PopupMenu.PopupMenuItem(stat + ': ' + tmpStat);
+            }
+            section.addMenuItem(menuItem);
+        }
 
         this._createPreferencesAndUpdateButton(section);
 
         this.menu.addMenuItem(section);
     },
 
-    _formatTime: function(ttl) {
-        let days = (ttl >= 86400) ? Math.floor(ttl / 86400) : 0;
-        ttl = ttl - (days * 86400);
-        let hours = Math.floor(ttl / 3600);
+    _formatTime: function(time) {
+        let days = (time >= 86400) ? Math.floor(time / 86400) : 0;
+        time = time - (days * 86400);
+        let hours = Math.floor(time / 3600);
         hours = (hours > 9) ? hours : '0' + hours;
-        ttl = ttl - (hours * 3600);
-        let minutes = Math.floor(ttl / 60);
+        time = time - (hours * 3600);
+        let minutes = Math.floor(time / 60);
         minutes = (minutes > 9) ? minutes : '0' + minutes;
-        let seconds = ttl % 60;
+        let seconds = time % 60;
         seconds = (seconds > 9) ? seconds : '0' + seconds;
 
         return days + ' days ' + hours + ':' + minutes + ':' + seconds;
