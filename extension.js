@@ -1,4 +1,5 @@
 const St = imports.gi.St;
+const Lang = imports.lang;
 const Main = imports.ui.main;
 const Soup = imports.gi.Soup;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
@@ -80,7 +81,7 @@ IdleRpgButton.prototype = {
     },
 
     create: function() {
-        this._loadData(this._updatePanelButton.bind(this));
+        this._loadData(Lang.bind(this, this._updatePanelButton));
     },
 
     destroy: function() {
@@ -172,7 +173,7 @@ IdleRpgButton.prototype = {
         item = new PopupMenu.PopupMenuItem(_("Update now!"));
         let self = this;
         item.connect('activate', function () {
-            self._loadData(self._updatePanelButton.bind(self));
+            self._loadData(Lang.bind(self, self._updatePanelButton));
         });
         menuSection.addMenuItem(item);
     }
