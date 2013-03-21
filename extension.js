@@ -1,12 +1,14 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const Soup = imports.gi.Soup;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const _httpSession = new Soup.SessionAsync();
 const Lib = Extension.imports.lib;
+const GLib = imports.gi.GLib;
 const Shell = imports.gi.Shell;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
@@ -25,7 +27,7 @@ const Matches = {
 
 const schema = "org.gnome.shell.extensions.IdleRPG";
 
-let item, iRpg;
+let item, iRpg, event;
 let metadata = Me.metadata;
 
 function IdleRpgButton() {
@@ -82,6 +84,11 @@ IdleRpgButton.prototype = {
 
     create: function() {
         this._loadData(Lang.bind(this, this._updatePanelButton));
+        event = GLib.timeout_add_seconds(0, 1800, Lang.bind(this, function () {
+            global.log('update');
+            this._loadData(Lang.bind(this, this._updatePanelButton));
+            return true;
+        }));
     },
 
     destroy: function() {
@@ -189,5 +196,6 @@ function enable() {
 }
 
 function disable() {
+    Mainloop.source_remove(event);
     iRpg.destroy();
 }

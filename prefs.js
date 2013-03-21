@@ -32,12 +32,12 @@ Prefs.prototype =
 	    this.settings = settings.getSettings();
     },
 
-    changeServerUrl: function(object, data) {
-	    this.settings.set_string("server-url", data);
+    changeServerUrl: function(entry) {
+	    this.settings.set_string("server-url", entry.text);
     },
 
-    changePlayerName: function(object, data) {
-	    this.settings.set_string("player-name", data);
+    changePlayerName: function(entry) {
+	    this.settings.set_string("player-name", entry.text);
     },
 
     buildPrefsWidget: function() {
@@ -50,7 +50,7 @@ Prefs.prototype =
         let hboxRemoveApplicationMenu = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         let labelRemoveApplicationMenu = new Gtk.Label({label: "IdleRPG webserver Url", xalign: 0});
         let valueRemoveApplicationMenu = new Gtk.Entry({text: this.settings.get_string("server-url")});
-        valueRemoveApplicationMenu.connect('notify::active', Lang.bind(this, this.changeServerUrl));
+        valueRemoveApplicationMenu.connect('notify::text', Lang.bind(this, this.changeServerUrl));
 
         hboxRemoveApplicationMenu.pack_start(labelRemoveApplicationMenu, true, true, 0);
         hboxRemoveApplicationMenu.add(valueRemoveApplicationMenu);
@@ -60,7 +60,7 @@ Prefs.prototype =
         let hboxDisplayDesktopButton = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         let labelDisplayDesktopButton = new Gtk.Label({label: "Player name", xalign: 0});
         let valueDisplayDesktopButton = new Gtk.Entry({text: this.settings.get_string("player-name")});
-        valueDisplayDesktopButton.connect('notify::active', Lang.bind(this, this.changePlayerName));
+        valueDisplayDesktopButton.connect('notify::text', Lang.bind(this, this.changePlayerName));
 
         hboxDisplayDesktopButton.pack_start(labelDisplayDesktopButton, true, true, 0);
         hboxDisplayDesktopButton.add(valueDisplayDesktopButton);
