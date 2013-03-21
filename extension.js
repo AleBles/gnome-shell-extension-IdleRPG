@@ -60,7 +60,7 @@ IdleRpgButton.prototype = {
         let settings = new Lib.Settings(schema);
         this._settings = settings.getSettings();
 
-        this._label = new St.Label({text: 'Level xx class'});
+        this._label = new St.Label({text: 'Level xx class', style_class: 'offline'});
         this.actor.add_actor(this._label);
 
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
@@ -95,10 +95,10 @@ IdleRpgButton.prototype = {
                 this._stats[match] = tmpMatch[1] || null;
             }
         }
-
+        let css_class = (this._stats.online === '1') ? 'online' : 'offline';
         this._stats.online = (this._stats.online === '1') ? 'Yes' : 'No';
-
         this._label.set_text('Level ' + this._stats.level + ' ' + this._stats.playerClass);
+        this._label.style_class = css_class;
 
         this.menu.box.get_children().forEach(function(c) {
             c.destroy()
