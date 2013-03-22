@@ -11,5 +11,10 @@
             <summary>Your player name</summary>
             <description/>
         </key>
+        <key name="update-time" type="i">
+            <default>1</default>
+            <summary>Interval to update at (hours)</summary>
+            <description/>
+        </key>
     </schema>
 </schemalist>

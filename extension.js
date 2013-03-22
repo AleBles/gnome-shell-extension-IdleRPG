@@ -84,8 +84,8 @@ IdleRpgButton.prototype = {
 
     create: function() {
         this._loadData(Lang.bind(this, this._updatePanelButton));
-        event = GLib.timeout_add_seconds(0, 1800, Lang.bind(this, function () {
-            global.log('update');
+        let time = this._settings.get_int('update-time') * 3600;
+        event = GLib.timeout_add_seconds(0, time, Lang.bind(this, function () {
             this._loadData(Lang.bind(this, this._updatePanelButton));
             return true;
         }));

@@ -10,6 +10,28 @@ gnome-shell-extension-IdleRPG is a simple gnome 3 extensions that allows you to 
 
 After the installation, restart GNOME Shell (`Alt`+`F2`, `r`, `Enter`) and enable the extension through *gnome-tweak-tool*.
 
+## Manual
+
+This is the **recommended method** for installation as you always get the latest version.
+You can install this extension for your user by executing:
+
+    cd ~/.local/share/gnome-shell/extensions
+    git clone https://github.com/AleBles/gnome-shell-extension-IdleRPG.git IdleRPG@alebles.keesinggames.nl
+    glib-compile-schemas IdleRPG@alebles.keesinggames.nl/schemas/
+
+or system wide by executing (this requires root permissions):
+
+    cd /usr/share/gnome-shell/extensions/
+    git clone https://github.com/AleBles/gnome-shell-extension-IdleRPG.git IdleRPG@alebles.keesinggames.nl
+    glib-compile-schemas IdleRPG@alebles.keesinggames.nl/schemas/
+
+After installation you need to restart the GNOME shell:
+
+* `ALT`+`F2` to open the command prompt
+* Enter `r` to restart the GNOME shell
+
+Then enable the extension:
+Open `gnome-tweak-tool` -> `Shell Extensions` -> `IdleRPG` -> On
 ## Through extensions.gnome.org
 
 [IdleRPG](https://extensions.gnome.org/)

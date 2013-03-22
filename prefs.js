@@ -23,8 +23,7 @@ function Prefs(schema)
     this.init(schema);
 }
 
-Prefs.prototype =
-{
+Prefs.prototype = {
     settings: null,
 
     init: function(schema) {
@@ -38,6 +37,10 @@ Prefs.prototype =
 
     changePlayerName: function(entry) {
 	    this.settings.set_string("player-name", entry.text);
+    },
+
+    changeUpdateTime: function(time) {
+        this.settings.set_int('update-time', time.get_value());
     },
 
     buildPrefsWidget: function() {
@@ -66,6 +69,17 @@ Prefs.prototype =
         hboxDisplayDesktopButton.add(valueDisplayDesktopButton);
         vbox.add(hboxDisplayDesktopButton);
 
+        let sliderBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        let sliderLabel = new Gtk.Label({ label: 'Hours before net update', xalign: 0 })
+        let update_time = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 1, 24, 1);
+        update_time.set_value(this.settings.get_int('update-time'));
+        update_time.set_digits(0);
+        update_time.set_hexpand(true);
+        update_time.connect('value-changed', Lang.bind(this, this.changeUpdateTime));
+
+        sliderBox.pack_start(sliderLabel, true, true, 0);
+        sliderBox.add(update_time);
+        vbox.add(sliderBox);
 
         frame.add(label);
         frame.add(vbox);
