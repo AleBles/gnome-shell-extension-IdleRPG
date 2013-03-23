@@ -3,31 +3,19 @@ const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Soup = imports.gi.Soup;
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const _httpSession = new Soup.SessionAsync();
-const Lib = Extension.imports.lib;
+const Lib = Me.imports.lib;
 const GLib = imports.gi.GLib;
 const Shell = imports.gi.Shell;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 Soup.Session.prototype.add_feature.call(_httpSession, new Soup.ProxyResolverDefault());
 
-const Matches = {
-    level: new RegExp('<level>([0-9]+)</level>'),
-    playerClass: new RegExp('<class>(.*)</class>'),
-    playTime: new RegExp('<ttl>([0-9]+)</ttl>'),
-    idle: new RegExp('<totalidled>([0-9]+)</totalidled>'),
-    online: new RegExp('<online>([0-9]+)</online>'),
-    items: new RegExp('<total>([0-9]+)</total>(\\s+)</items>'),
-    penalties: new RegExp('<total>([0-9]+)</total>(\\s+)</penalties>')
-}
-
-
 const schema = "org.gnome.shell.extensions.IdleRPG";
 
-let item, iRpg, event;
+let iRpg, event, settings;
 let metadata = Me.metadata;
 
 function IdleRpgButton() {
@@ -50,6 +38,15 @@ function IdleRpgButton() {
         idle: _("Total idle time: "),
         penalties: _("Penalty sum: ")
     };
+    this._matches = {
+        level: new RegExp('<level>([0-9]+)</level>'),
+        playerClass: new RegExp('<class>(.*)</class>'),
+        playTime: new RegExp('<ttl>([0-9]+)</ttl>'),
+        idle: new RegExp('<totalidled>([0-9]+)</totalidled>'),
+        online: new RegExp('<online>([0-9]+)</online>'),
+        items: new RegExp('<total>([0-9]+)</total>(\\s+)</items>'),
+        penalties: new RegExp('<total>([0-9]+)</total>(\\s+)</penalties>')
+    };
     this._init();
 };
 
@@ -59,7 +56,6 @@ IdleRpgButton.prototype = {
     _init: function() {
         PanelMenu.Button.prototype._init.call(this, 0.0);
 
-        let settings = new Lib.Settings(schema);
         this._settings = settings.getSettings();
 
         this._label = new St.Label({text: 'Level xx class', style_class: 'offline'});
@@ -91,14 +87,10 @@ IdleRpgButton.prototype = {
         }));
     },
 
-    destroy: function() {
-        //nothing yet
-    },
-
     _updatePanelButton: function(playerData) {
-        for (let match in Matches) {
+        for (let match in this._matches) {
             if(this._stats.hasOwnProperty(match)) {
-                let tmpMatch = Matches[match].exec(playerData);
+                let tmpMatch = this._matches[match].exec(playerData);
                 this._stats[match] = tmpMatch[1] || null;
             }
         }
@@ -166,7 +158,7 @@ IdleRpgButton.prototype = {
 
         let _appSys = Shell.AppSystem.get_default();
         let _gsmPrefs = _appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-        item = new PopupMenu.PopupMenuItem(_("Preferences..."));
+        let item = new PopupMenu.PopupMenuItem(_("Preferences..."));
         item.connect('activate', function () {
             if (_gsmPrefs.get_state() == _gsmPrefs.SHELL_APP_STATE_RUNNING){
                 _gsmPrefs.activate();
@@ -187,10 +179,11 @@ IdleRpgButton.prototype = {
 }
 
 function init() {
-    iRpg = new IdleRpgButton();
+    settings = new Lib.Settings(schema);
 }
 
 function enable() {
+    iRpg = new IdleRpgButton();
     iRpg.create();
     Main.panel.addToStatusArea('IdleRPG', iRpg);
 }
