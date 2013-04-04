@@ -58,7 +58,7 @@ IdleRpgButton.prototype = {
 
         this._settings = settings.getSettings();
 
-        this._label = new St.Label({text: 'Level xx class', style_class: 'offline'});
+        this._label = new St.Label({text: 'No Player', style_class: 'offline'});
         this.actor.add_actor(this._label);
 
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
@@ -79,15 +79,15 @@ IdleRpgButton.prototype = {
     },
 
     create: function() {
-        this._loadData(Lang.bind(this, this._updatePanelButton));
+        this._loadData(Lang.bind(this, this._updatePanelButtonWithUser), Lang.bind(this, this._updatePanelButtonWithError));
         let time = this._settings.get_int('update-time') * 3600;
         event = GLib.timeout_add_seconds(0, time, Lang.bind(this, function () {
-            this._loadData(Lang.bind(this, this._updatePanelButton));
+            this._loadData(Lang.bind(this, this._updatePanelButtonWithUser), Lang.bind(this, this._updatePanelButtonWithError));
             return true;
         }));
     },
 
-    _updatePanelButton: function(playerData) {
+    _updatePanelButtonWithUser: function(playerData) {
         for (let match in this._matches) {
             if(this._stats.hasOwnProperty(match)) {
                 let tmpMatch = this._matches[match].exec(playerData);
@@ -99,9 +99,7 @@ IdleRpgButton.prototype = {
         this._label.set_text('Level ' + this._stats.level + ' ' + this._stats.playerClass);
         this._label.style_class = css_class;
 
-        this.menu.box.get_children().forEach(function(c) {
-            c.destroy()
-        });
+        this._destroyMenu();
 
         let section = new PopupMenu.PopupMenuSection("IdleRPG");
 
@@ -123,6 +121,25 @@ IdleRpgButton.prototype = {
         this.menu.addMenuItem(section);
     },
 
+    _destroyMenu: function() {
+        this.menu.box.get_children().forEach(function(c) {
+            c.destroy()
+        });
+
+    },
+
+    _updatePanelButtonWithError: function() {
+        let css_class = 'offline';
+        this._label.set_text('No connection');
+        this._label.style_class = css_class;
+
+        this._destroyMenu();
+
+        let section = new PopupMenu.PopupMenuSection("IdleRPG");
+        this._createPreferencesAndUpdateButton(section);
+        this.menu.addMenuItem(section);
+    },
+
     _formatTime: function(time) {
         let days = (time >= 86400) ? Math.floor(time / 86400) : 0;
         time = time - (days * 86400);
@@ -137,20 +154,18 @@ IdleRpgButton.prototype = {
         return days + ' days ' + hours + ':' + minutes + ':' + seconds;
     },
 
-    _loadData: function(cb) {
+    _loadData: function(cbSuccess, cbError) {
         let url = 'http://' + this._settings.get_string('server-url') + '/xml.php?player=' + this._settings.get_string('player-name');
         let message = Soup.Message.new('GET', url);
         _httpSession.queue_message(message, function(session, message) {
-            cb(message.response_body.data)
+            if (message.status_code === 200 && message.response_headers.get_content_type() == 'text/xml,') {
+                cbSuccess(message.response_body.data)
+            } else {
+                if(typeof cbError === 'function') {
+                    cbError();
+                }
+            }
         });
-    },
-
-    _fetchPlayerStats: function(playerStats) {
-
-    },
-
-    _createPlayerDataMenu: function(menuSection, playerData) {
-
     },
 
     _createPreferencesAndUpdateButton: function (menuSection) {
@@ -172,7 +187,7 @@ IdleRpgButton.prototype = {
         item = new PopupMenu.PopupMenuItem(_("Update now!"));
         let self = this;
         item.connect('activate', function () {
-            self._loadData(Lang.bind(self, self._updatePanelButton));
+            self._loadData(Lang.bind(self, self._updatePanelButtonWithUser));
         });
         menuSection.addMenuItem(item);
     }
