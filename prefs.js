@@ -6,10 +6,7 @@ const Lib = Extension.imports.lib;
 
 const schema = "org.gnome.shell.extensions.IdleRPG";
 
-function init()
-{
-
-}
+function init() {}
 
 function buildPrefsWidget()
 {
@@ -45,30 +42,30 @@ Prefs.prototype = {
 
     buildPrefsWidget: function() {
         let frame = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, border_width: 10});
-
         let label = new Gtk.Label({ label: "<b>Global</b>", use_markup: true, xalign: 0});
-        let vbox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin_left: 20});
+        let box = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, margin_left: 20});
 
         //Change server url
-        let hboxRemoveApplicationMenu = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let labelRemoveApplicationMenu = new Gtk.Label({label: "IdleRPG webserver Url", xalign: 0});
-        let valueRemoveApplicationMenu = new Gtk.Entry({text: this.settings.get_string("server-url")});
-        valueRemoveApplicationMenu.connect('notify::text', Lang.bind(this, this.changeServerUrl));
+        let serverUrlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        let serverUrlLabel = new Gtk.Label({label: "IdleRPG webserver Url", xalign: 0});
+        let serverUrlValue = new Gtk.Entry({text: this.settings.get_string("server-url")});
+        serverUrlValue.connect('notify::text', Lang.bind(this, this.changeServerUrl));
 
-        hboxRemoveApplicationMenu.pack_start(labelRemoveApplicationMenu, true, true, 0);
-        hboxRemoveApplicationMenu.add(valueRemoveApplicationMenu);
-        vbox.add(hboxRemoveApplicationMenu);
+        serverUrlBox.pack_start(serverUrlLabel, true, true, 0);
+        serverUrlBox.add(serverUrlValue);
+        box.add(serverUrlBox);
 
         //Changeplayer name
-        let hboxDisplayDesktopButton = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let labelDisplayDesktopButton = new Gtk.Label({label: "Player name", xalign: 0});
-        let valueDisplayDesktopButton = new Gtk.Entry({text: this.settings.get_string("player-name")});
-        valueDisplayDesktopButton.connect('notify::text', Lang.bind(this, this.changePlayerName));
+        let playerNameBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        let playerNameLabel = new Gtk.Label({label: "Player name", xalign: 0});
+        let playerNameValue = new Gtk.Entry({text: this.settings.get_string("player-name")});
+        playerNameValue.connect('notify::text', Lang.bind(this, this.changePlayerName));
 
-        hboxDisplayDesktopButton.pack_start(labelDisplayDesktopButton, true, true, 0);
-        hboxDisplayDesktopButton.add(valueDisplayDesktopButton);
-        vbox.add(hboxDisplayDesktopButton);
+        playerNameBox.pack_start(playerNameLabel, true, true, 0);
+        playerNameBox.add(playerNameValue);
+        box.add(playerNameBox);
 
+        //Change update time
         let sliderBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         let sliderLabel = new Gtk.Label({ label: 'Hours before net update', xalign: 0 })
         let update_time = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 1, 24, 1);
@@ -79,12 +76,12 @@ Prefs.prototype = {
 
         sliderBox.pack_start(sliderLabel, true, true, 0);
         sliderBox.add(update_time);
-        vbox.add(sliderBox);
+        box.add(sliderBox);
 
+        //Create the frame
         frame.add(label);
-        frame.add(vbox);
+        frame.add(box);
         frame.show_all();
-
         return frame;
     }
 }
