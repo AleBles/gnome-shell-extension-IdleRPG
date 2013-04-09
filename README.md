@@ -34,7 +34,7 @@ Then enable the extension:
 Open `gnome-tweak-tool` -> `Shell Extensions` -> `IdleRPG` -> On
 ## Through extensions.gnome.org
 
-[IdleRPG](https://extensions.gnome.org/)
+[IdleRPG](https://extensions.gnome.org/extension/643/idlerpg/)
 
 ----
 
