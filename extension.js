@@ -158,7 +158,7 @@ IdleRpgButton.prototype = {
         let url = 'http://' + this._settings.get_string('server-url') + '/xml.php?player=' + this._settings.get_string('player-name');
         let message = Soup.Message.new('GET', url);
         _httpSession.queue_message(message, function(session, message) {
-            if (message.status_code === 200 && message.response_headers.get_content_type() == 'text/xml,') {
+            if (message.status_code === 200 && message.response_headers.get_content_type()[0] === 'text/xml') {
                 cbSuccess(message.response_body.data)
             } else {
                 if(typeof cbError === 'function') {
