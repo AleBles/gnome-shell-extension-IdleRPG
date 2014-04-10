@@ -10,7 +10,6 @@ const _httpSession = new Soup.SessionAsync();
 const Lib = Me.imports.lib;
 const GLib = imports.gi.GLib;
 const Shell = imports.gi.Shell;
-const Promise = Me.imports.promise
 
 Soup.Session.prototype.add_feature.call(_httpSession, new Soup.ProxyResolverDefault());
 
